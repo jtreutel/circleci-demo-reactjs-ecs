@@ -23,7 +23,7 @@ jobs:
               sleep 1
               tstop=$(date +%s%N)
               cstop=$(cat /sys/fs/cgroup/cpu/cpuacct.usage)
-              echo $(date +"%T") \| $( echo "($cstop - $cstart) / ($tstop - $tstart) * 100" | bc ) >> /tmp/cpu_util_pct.log
+              echo $(date +"%T") \| $( echo "scale=5; ($cstop - $cstart) / ($tstop - $tstart) * 100" | bc ) >> /tmp/cpu_util_pct.log
             done
           background: true
       - checkout
