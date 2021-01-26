@@ -34,7 +34,7 @@ jobs:
             cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes >> /tmp/max_mem_util.log
           when: always
       - store_artifacts:
-          path: /tmp/cpu_util.log
+          path: /tmp/cpu_util_pct.log
       - store_artifacts:
           path: /tmp/max_mem_util.log    
 
