@@ -30,7 +30,7 @@ jobs:
           command: npm run test
       - run:
           command: |
-            cat Memory max usage (bytes) >> /tmp/max_mem_util.log
+            cat Memory max usage in bytes >> /tmp/max_mem_util.log
             cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes >> /tmp/max_mem_util.log
           when: always
       - store_artifacts:
