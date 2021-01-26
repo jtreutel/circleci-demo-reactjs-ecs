@@ -14,6 +14,7 @@ jobs:
       #    background: true
       - run:
           command: |
+            sudo apt update && sudo apt install bc -y
             echo Timestamp \| CPU Util Percentage >> /tmp/cpu_util_pct.log
             while true; do
               tstart=$(date +%s%N)
@@ -21,7 +22,7 @@ jobs:
               sleep 1
               tstop=$(date +%s%N)
               cstop=$(cat /sys/fs/cgroup/cpu/cpuacct.usage)
-              echo $(date +"%T") \| $(( ($cstop - $cstart) / ($tstop - $tstart) * 100 )) >> /tmp/cpu_util_pct.log
+              echo $(date +"%T") \| $( bc -l "($cstop - $cstart) / ($tstop - $tstart) * 100" ) >> /tmp/cpu_util_pct.log
             done
           background: true
       - checkout
@@ -30,8 +31,7 @@ jobs:
           command: npm run test
       - run:
           command: |
-            echo Memory max usage in bytes >> /tmp/max_mem_util.log
-            cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes >> /tmp/max_mem_util.log
+            echo Memory max usage: $(expr $(cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes) / 1000000) MB | tee /tmp/max_mem_util.log    
           when: always
       - store_artifacts:
           path: /tmp/cpu_util_pct.log
