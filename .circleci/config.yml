@@ -31,8 +31,11 @@ jobs:
       - run:
           command: npm run test
       - run:
+          name: Usage stats
           command: |
             echo Memory max usage: $(expr $(cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes) / 1000000) MB | tee /tmp/max_mem_util.log    
+            echo 
+            cat /tmp/cpu_util_pct.log
           when: always
       - store_artifacts:
           path: /tmp/cpu_util_pct.log
