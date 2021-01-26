@@ -10,19 +10,19 @@ jobs:
       #tag: '13.14'
     steps:
       - run:
-          command: while true; do echo $(date +"%T") $(cat /sys/fs/cgroup/cpuacct/cpuacct.usage) >> ./cpu_util.log && sleep 1; done
+          command: while true; do echo $(date +"%T") $(cat /sys/fs/cgroup/cpuacct/cpuacct.usage) >> /tmp/cpu_util.log && sleep 1; done
           background: true
       - checkout
       - node/install-packages
       - run:
           command: npm run test
       - run:
-          command: cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes >> ./max_mem_util.log
+          command: cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes >> /tmp/max_mem_util.log
           when: always
       - store_artifacts:
-          path: ./cpu_util.log
+          path: /tmp/cpu_util.log
       - store_artifacts:
-          path: ./max_mem_util.log    
+          path: /tmp/max_mem_util.log    
 
 workflows:
   app-tests:
