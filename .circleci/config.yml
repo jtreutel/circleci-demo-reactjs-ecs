@@ -13,6 +13,7 @@ jobs:
       #    command: while true; do echo $(date +"%T") $(cat /sys/fs/cgroup/cpuacct/cpuacct.usage) >> /tmp/cpu_util.log && sleep 1; done
       #    background: true
       - run:
+          #I don't think this actually shows anything useful
           command: |
             sudo apt update && sudo apt install bc -y
             echo Timestamp \| CPU Util Percentage >> /tmp/cpu_util_pct.log
@@ -22,7 +23,7 @@ jobs:
               sleep 1
               tstop=$(date +%s%N)
               cstop=$(cat /sys/fs/cgroup/cpu/cpuacct.usage)
-              echo $(date +"%T") \| $( "($cstop - $cstart) / ($tstop - $tstart) * 100" | bc ) >> /tmp/cpu_util_pct.log
+              echo $(date +"%T") \| $( echo "($cstop - $cstart) / ($tstop - $tstart) * 100" | bc ) >> /tmp/cpu_util_pct.log
             done
           background: true
       - checkout
