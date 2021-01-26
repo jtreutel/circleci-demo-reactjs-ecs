@@ -10,7 +10,7 @@ jobs:
       #tag: '13.14'
     steps:
       - run:
-          command: while true; echo $(date +"%T") $(cat /sys/fs/cgroup/cpuacct/cpuacct.usage) >> ./cpu_util.log && sleep 1; done
+          command: while true; do echo $(date +"%T") $(cat /sys/fs/cgroup/cpuacct/cpuacct.usage) >> ./cpu_util.log && sleep 1; done
           background: true
       - checkout
       - node/install-packages
