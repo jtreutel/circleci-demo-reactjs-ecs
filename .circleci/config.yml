@@ -15,12 +15,11 @@ jobs:
       - run:
           command: |
             while true; do
-              cgroup=$(awk -F: '$2 == "cpu,cpuacct" { print $3 }' /proc/self/cgroup)
               tstart=$(date +%s%N)
-              cstart=$(cat /sys/fs/cgroup/cpu/$cgroup/cpuacct.usage)
+              cstart=$(cat /sys/fs/cgroup/cpu/cpuacct.usage)
               sleep 1
               tstop=$(date +%s%N)
-              cstop=$(cat /sys/fs/cgroup/cpu/$cgroup/cpuacct.usage)
+              cstop=$(cat /sys/fs/cgroup/cpu/cpuacct.usage)
               echo $(date +"%T") $(($cstop - $cstart) / ($tstop - $tstart) * 100)) >> /tmp/cpu_util_pct.log
             done
       - checkout
