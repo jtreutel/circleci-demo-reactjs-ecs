@@ -9,9 +9,9 @@ jobs:
       name: node/default
       #tag: '13.14'
     steps:
-      #- run:
-      #    command: while true; do echo $(date +"%T") $(cat /sys/fs/cgroup/cpuacct/cpuacct.usage) >> /tmp/cpu_util.log && sleep 1; done
-      #    background: true
+      - run:
+          command: while true; do echo $(date +"%D %T %Z") $(cat /sys/fs/cgroup/cpuacct/cpuacct.usage) >> /tmp/cpu_util.log && sleep 1; done
+          background: true
       - run:
           #I don't think this actually shows anything useful
           command: |
@@ -23,7 +23,7 @@ jobs:
               sleep 1
               tstop=$(date +%s%N)
               cstop=$(cat /sys/fs/cgroup/cpu/cpuacct.usage)
-              echo $(date +"%T") \| $( echo "scale=5; ($cstop - $cstart) / ($tstop - $tstart) * 100" | bc ) >> /tmp/cpu_util_pct.log
+              echo $(date +"%D %T %Z") \| $( echo "scale=5; ($cstop - $cstart) / ($tstop - $tstart) * 100" | bc ) >> /tmp/cpu_util_pct.log
             done
           background: true
       - checkout
@@ -37,6 +37,8 @@ jobs:
             echo 
             cat /tmp/cpu_util_pct.log
           when: always
+      - store_artifacts:
+          path: /tmp/cpu_util.log
       - store_artifacts:
           path: /tmp/cpu_util_pct.log
       - store_artifacts:
