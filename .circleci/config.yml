@@ -13,7 +13,7 @@ jobs:
           #I don't think this actually shows anything useful
           command: |
             sudo apt update && sudo apt install bc -y
-            echo Timestamp \| CPU Util (ns) \| CPU Util (%) >> /tmp/cpu_util.log
+            echo Timestamp \| CPU Util \(ns\) \| CPU Util \(%\) >> /tmp/cpu_util.log
             while true; do
               tstart=$(date +%s%N)
               cstart=$(cat /sys/fs/cgroup/cpu/cpuacct.usage)
