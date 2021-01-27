@@ -1,5 +1,6 @@
 orbs:
   node: circleci/node@4.0.0
+  docker-cpu-profiling: mkly/docker-cpu-profiling@0.2.1
 
 version: 2.1
 
@@ -43,3 +44,5 @@ workflows:
   app-tests:
     jobs:
       - node-test
+          pre-steps:
+            - docker-cpu-profiling/profile
