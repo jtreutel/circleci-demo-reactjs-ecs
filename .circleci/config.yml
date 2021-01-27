@@ -10,20 +10,17 @@ jobs:
       #tag: '13.14'
     steps:
       - run:
-          command: while true; do echo $(date +"%D %T %Z") $(cat /sys/fs/cgroup/cpuacct/cpuacct.usage) >> /tmp/cpu_util.log && sleep 1; done
-          background: true
-      - run:
           #I don't think this actually shows anything useful
           command: |
             sudo apt update && sudo apt install bc -y
-            echo Timestamp \| CPU Util Percentage >> /tmp/cpu_util_pct.log
+            echo Timestamp \| CPU Util (ns) \| CPU Util (%) >> /tmp/cpu_util.log
             while true; do
               tstart=$(date +%s%N)
               cstart=$(cat /sys/fs/cgroup/cpu/cpuacct.usage)
               sleep 1
               tstop=$(date +%s%N)
               cstop=$(cat /sys/fs/cgroup/cpu/cpuacct.usage)
-              echo $(date +"%D %T %Z") \| $( echo "scale=5; ($cstop - $cstart) / ($tstop - $tstart) * 100" | bc ) >> /tmp/cpu_util_pct.log
+              echo $(date +"%D %T %Z") \| $(cat /sys/fs/cgroup/cpuacct/cpuacct.usage) \| $( echo "scale=5; ($cstop - $cstart) / ($tstop - $tstart) * 100" | bc ) >> /tmp/cpu_util.log
             done
           background: true
       - checkout
@@ -35,12 +32,10 @@ jobs:
           command: |
             echo Memory max usage: $(expr $(cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes) / 1000000) MB | tee /tmp/max_mem_util.log    
             echo 
-            cat /tmp/cpu_util_pct.log
+            cat /tmp/cpu_util.log
           when: always
       - store_artifacts:
           path: /tmp/cpu_util.log
-      - store_artifacts:
-          path: /tmp/cpu_util_pct.log
       - store_artifacts:
           path: /tmp/max_mem_util.log    
 
