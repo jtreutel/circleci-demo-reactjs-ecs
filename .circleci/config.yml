@@ -14,11 +14,6 @@ jobs:
       - node/install-packages
       - run:
           command: npm run test
-      - run:
-          name: Profiling memory
-          command: |
-            echo Memory max usage: $(expr $(cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes) / 1000000) MB  
-          when: always 
 
 workflows:
   app-tests:
