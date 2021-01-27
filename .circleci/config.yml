@@ -67,9 +67,9 @@ commands:
 
           sample_length_mcs=$((<< parameters.sample_length >> * 1000000))
 
-          echo CPU util avg over << parameters.sample_length >> second intervals | tee /tmp/cpu_util.log
+          echo CPU util avg over << parameters.sample_length >> second intervals >> /tmp/cpu_util.log
           echo >> /tmp/cpu_util.log
-          echo Timestamp \| CPU Util \(%\)"
+          echo Timestamp \| CPU Util \(%\) >> /tmp/cpu_util.log
 
           while true; do
             sample_1=$(cat /sys/fs/cgroup/cpuacct/cpuacct.usage_user)
