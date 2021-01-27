@@ -1,6 +1,5 @@
 orbs:
   node: circleci/node@4.0.0
-  #docker-cpu-profiling: mkly/docker-cpu-profiling@0.2.1
 
 version: 2.1
 
@@ -20,14 +19,9 @@ workflows:
     jobs:
       - node-test:
           pre-steps:
-            #- docker-cpu-profiling/profile
             - check-cpu-util
           post-steps:
-            - run:
-                name: Profiling memory
-                command: |
-                  echo Memory max usage: $(expr $(cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes) / 1000000) MB | tee /tmp/max_mem_util.log
-                when: always 
+            - check-max-mem-util
             - store_artifacts:
                 path: /tmp/cpu_util.log
             - store_artifacts:
@@ -35,6 +29,11 @@ workflows:
 
 
 commands:
+  check-max-mem-util:
+    description: "Measure max memory utilization"
+    steps:
+      - run: |
+          echo Memory max usage: $(expr $(cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes) / 1000000) MB | tee /tmp/max_mem_util.log
   check-cpu-util:
     description: "Measure CPU utilization over time"
     parameters:
