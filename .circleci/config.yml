@@ -89,6 +89,5 @@ commands:
             elif command -v awk >> /dev/null 2>&1; then
               percent=$(echo - | awk "{print $total_used / $total_available / $cpus}")
             fi
-            echo "CPU util avg over << parameters.sample_length >> seconds: ${percent}%"
             echo $(date +"%D %T %Z") \| ${percent}%" >> /tmp/cpu_util_pct.log | tee /tmp/cpu_util.log
           done
