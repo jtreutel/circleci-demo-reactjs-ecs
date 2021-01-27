@@ -43,6 +43,6 @@ jobs:
 workflows:
   app-tests:
     jobs:
-      - node-test
+      - node-test:
           pre-steps:
             - docker-cpu-profiling/profile
