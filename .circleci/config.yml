@@ -1,6 +1,6 @@
 orbs:
   node: circleci/node@4.0.0
-  docker-cpu-profiling: mkly/docker-cpu-profiling@0.2.1
+  #docker-cpu-profiling: mkly/docker-cpu-profiling@0.2.1
 
 version: 2.1
 
@@ -20,10 +20,64 @@ workflows:
     jobs:
       - node-test:
           pre-steps:
-            - docker-cpu-profiling/profile
+            #- docker-cpu-profiling/profile
+            - check-cpu-util
           post-steps:
             - run:
                 name: Profiling memory
                 command: |
                   echo Memory max usage: $(expr $(cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes) / 1000000) MB  
                 when: always 
+
+
+commands:
+  check-cpu-util:
+    description: "Measure CPU utilization over time"
+    parameters:
+      start_delay: 
+        type: integer
+        default: 3
+      sample_length:
+        type: integer
+        default: 5
+    steps:
+      - run: |
+          sleep << parameters.start_delay >>
+
+          cpu_shares=$(cat /sys/fs/cgroup/cpu/cpu.shares)
+
+          if command -v jq >> /dev/null 2>&1; then
+            cpus=$(echo "$cpu_shares / 1024" | jq -nf /dev/stdin)
+          elif command -v awk >> /dev/null 2>&1; then
+            cpus=$(echo - | awk "{print $cpu_shares / 1024}")
+          fi
+
+          quota=$(cat /sys/fs/cgroup/cpu/cpu.cfs_quota_us)
+          quota_interval=$(cat /sys/fs/cgroup/cpu/cpu.cfs_period_us)
+
+          if command -v jq >> /dev/null 2>&1; then
+            available_per_micro_second=$(echo "$quota / $quota_interval" | jq -nf /dev/stdin)
+          elif command -v awk >> /dev/null 2>&1; then
+            available_per_micro_second=$(echo - | awk "{print $quota / $quota_interval}")
+          fi
+
+          sample_1=$(cat /sys/fs/cgroup/cpuacct/cpuacct.usage_user)
+          sleep << parameters.sample_length >>
+          sample_2=$(cat /sys/fs/cgroup/cpuacct/cpuacct.usage_user)
+
+          sample_length=$((<< parameters.sample_length >> * 1000000))
+
+          if command -v jq >> /dev/null 2>&1; then
+            total_available=$(echo "$available_per_micro_second * $sample_length" | jq -nf /dev/stdin)
+          elif command -v awk >> /dev/null 2>&1; then
+            total_available=$(echo - | awk "{print $available_per_micro_second * $sample_length}")
+          fi
+
+          total_used=$(($sample_2 - $sample_1))
+
+          if command -v jq >> /dev/null 2>&1; then
+            percent=$(echo "$total_used / $total_available / $cpus" | jq -nf /dev/stdin)
+          elif command -v awk >> /dev/null 2>&1; then
+            percent=$(echo - | awk "{print $total_used / $total_available / $cpus}")
+          fi
+          echo "CPU util avg over << parameters.sample_length >> seconds: ${percent}%"
