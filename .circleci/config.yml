@@ -26,8 +26,12 @@ workflows:
             - run:
                 name: Profiling memory
                 command: |
-                  echo Memory max usage: $(expr $(cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes) / 1000000) MB  
+                  echo Memory max usage: $(expr $(cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes) / 1000000) MB | tee /tmp/max_mem_util.log
                 when: always 
+            - store_artifacts:
+                path: /tmp/cpu_util.log
+            - store_artifacts:
+                path: /tmp/max_mem_util.log    
 
 
 commands:
@@ -39,7 +43,7 @@ commands:
         default: 3
       sample_length:
         type: integer
-        default: 5
+        default: 1
     steps:
       - run: |
           sleep << parameters.start_delay >>
@@ -61,23 +65,30 @@ commands:
             available_per_micro_second=$(echo - | awk "{print $quota / $quota_interval}")
           fi
 
-          sample_1=$(cat /sys/fs/cgroup/cpuacct/cpuacct.usage_user)
-          sleep << parameters.sample_length >>
-          sample_2=$(cat /sys/fs/cgroup/cpuacct/cpuacct.usage_user)
+          sample_length_mcs=$((<< parameters.sample_length >> * 1000000))
 
-          sample_length=$((<< parameters.sample_length >> * 1000000))
+          echo CPU util avg over << parameters.sample_length >> second intervals | tee /tmp/cpu_util.log
+          echo >> /tmp/cpu_util.log
+          echo Timestamp \| CPU Util \(%\)"
 
-          if command -v jq >> /dev/null 2>&1; then
-            total_available=$(echo "$available_per_micro_second * $sample_length" | jq -nf /dev/stdin)
-          elif command -v awk >> /dev/null 2>&1; then
-            total_available=$(echo - | awk "{print $available_per_micro_second * $sample_length}")
-          fi
+          while true; do
+            sample_1=$(cat /sys/fs/cgroup/cpuacct/cpuacct.usage_user)
+            sleep << parameters.sample_length >>
+            sample_2=$(cat /sys/fs/cgroup/cpuacct/cpuacct.usage_user)
 
-          total_used=$(($sample_2 - $sample_1))
+            if command -v jq >> /dev/null 2>&1; then
+              total_available=$(echo "$available_per_micro_second * $sample_length_mcs" | jq -nf /dev/stdin)
+            elif command -v awk >> /dev/null 2>&1; then
+              total_available=$(echo - | awk "{print $available_per_micro_second * $sample_length_mcs}")
+            fi
 
-          if command -v jq >> /dev/null 2>&1; then
-            percent=$(echo "$total_used / $total_available / $cpus" | jq -nf /dev/stdin)
-          elif command -v awk >> /dev/null 2>&1; then
-            percent=$(echo - | awk "{print $total_used / $total_available / $cpus}")
-          fi
-          echo "CPU util avg over << parameters.sample_length >> seconds: ${percent}%"
+            total_used=$(($sample_2 - $sample_1))
+
+            if command -v jq >> /dev/null 2>&1; then
+              percent=$(echo "$total_used / $total_available / $cpus" | jq -nf /dev/stdin)
+            elif command -v awk >> /dev/null 2>&1; then
+              percent=$(echo - | awk "{print $total_used / $total_available / $cpus}")
+            fi
+            echo "CPU util avg over << parameters.sample_length >> seconds: ${percent}%"
+            echo $(date +"%D %T %Z") \| ${percent}%" >> /tmp/cpu_util_pct.log | tee /tmp/cpu_util.log
+          done
