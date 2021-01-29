@@ -21,8 +21,8 @@ jobs:
       - image: cimg/base:2021.01 
     steps:
       - checkout
-      #- terraform/install:  
-      #    terraform_version: 0.14.5
+      - terraform/install:  
+          terraform_version: 0.14.5
       - terraform/fmt:  
           path: ./tf/ecr
       - terraform/validate:  
@@ -36,8 +36,8 @@ jobs:
       - image: cimg/base:2021.01 
     steps:
       - checkout
-      #- terraform/install:  
-      #    terraform_version: 0.14.5
+      - terraform/install:  
+          terraform_version: 0.14.5
       - terraform/init:
           path: ./tf/ecr
       - terraform/apply:
@@ -57,6 +57,7 @@ workflows:
           requires:
             - node/test
             - static-analysis
+            - terraform-linting
       - aws-ecr/build-and-push-image:
           repo: "${AWS_RESOURCE_NAME_PREFIX}"
           tag: "${CIRCLE_BUILD_NUM}-${CIRCLE_SHA1}"
