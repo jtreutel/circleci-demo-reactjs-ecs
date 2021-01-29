@@ -7,7 +7,7 @@ resource "aws_ecr_repository" "nodedemo" {
 }
 
 resource "aws_ecs_task_definition" "nodedemo" {
-  family                = "${var.aws_resource_name_prefix}-service"
+  family = "${var.aws_resource_name_prefix}-service"
   container_definitions = templatefile(
     "${path.module}/task-definitions/service.json.tpl",
     {
