@@ -137,10 +137,10 @@ resource "aws_security_group" "nodedemo_asg" {
   vpc_id      = var.vpc_id
 
   ingress {
-    from_port                = 0
-    to_port                  = 0
-    protocol                 = "-1"
-    source_security_group_id = aws_security_group.nodedemo_lb.id
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = aws_security_group.nodedemo_lb.id
   }
 
   egress {
