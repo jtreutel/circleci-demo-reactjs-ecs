@@ -11,6 +11,6 @@
         "protocol": "tcp",
         "containerPort": 3000
       }
-    ],
+    ]
   }
 ]
