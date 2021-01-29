@@ -14,7 +14,7 @@ jobs:
       - checkout
       - run: |
           npm install eslint eslint-plugin-react 
-          node_modules/eslint/bin/eslint.js ./src/App.js
+          node_modules/eslint/bin/eslint.js ./src/
         #TODO configure eslint
   terraform-linting:
     docker:
