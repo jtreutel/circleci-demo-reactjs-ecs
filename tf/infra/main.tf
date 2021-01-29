@@ -74,7 +74,7 @@ resource "aws_lb" "nodedemo" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.nodedemo_alb.id]
-  subnets            = [var.subnet_id]
+  subnets            = [var.subnet_id_a, var.subnet_id_b]
 }
 
 resource "aws_lb_listener" "nodedemo" {
