@@ -1,5 +1,5 @@
 data "aws_route53_zone" "nodedemo" {
-  name         = "jennings-circleci20.com"
+  name = "jennings-circleci20.com"
 }
 
 resource "aws_route53_record" "www" {
