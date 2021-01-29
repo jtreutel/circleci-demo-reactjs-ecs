@@ -64,7 +64,7 @@ workflows:
             - terraform-check-ecr-and-dns
       - aws-ecr/build-and-push-image:
           repo: "${AWS_RESOURCE_NAME_PREFIX}"
-          tag: "${CIRCLE_BUILD_NUM}-${CIRCLE_SHA1}"
+          tag: "${CIRCLE_SHA1}"
           context: node-demo
           create-repo: false
           requires:
@@ -74,7 +74,7 @@ workflows:
             - aws-ecr/build-and-push-image 
           family: "${AWS_RESOURCE_NAME_PREFIX}-service"
           cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
-          container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_BUILD_NUM}-${CIRCLE_SHA1}"
+          container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_SHA1}"
 
 
 
