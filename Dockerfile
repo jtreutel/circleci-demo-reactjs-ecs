@@ -1,4 +1,5 @@
 FROM node:15.7.0
+LABEL "maintainer"="github.com/jtreutel"
 
 EXPOSE 3000
 
@@ -15,4 +16,6 @@ RUN npm install react-scripts@3.4.3 -g --silent
 COPY . ./
 
 # start app
-CMD ["npm", "start"]
+#CMD ["npm", "start"]
+
+ENTRYPOINT npm start
