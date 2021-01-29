@@ -21,8 +21,8 @@ jobs:
       - image: cimg/base:2021.01 
     steps:
       - checkout
-      - terraform/install:  
-          terraform_version: 0.14.5
+      #- terraform/install:  
+      #    terraform_version: 0.14.5
       - terraform/fmt:  
           path: ./terraform/ecr
       - terraform/validate:  
@@ -36,8 +36,8 @@ jobs:
       - image: cimg/base:2021.01 
     steps:
       - checkout
-      - terraform/install:  
-          terraform_version: 0.14.5
+      #- terraform/install:  
+      #    terraform_version: 0.14.5
       - terraform/init:
           path: ./terraform/ecr
       - terraform/apply:
