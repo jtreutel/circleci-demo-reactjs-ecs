@@ -15,6 +15,7 @@ jobs:
           node_modules/eslint/bin/eslint.js ./src/App.js
 
 workflows:
+  version: 2
   app-tests:
     jobs:
       - node/test
