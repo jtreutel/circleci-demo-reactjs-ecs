@@ -1,5 +1,7 @@
 FROM node:15.7.0
 
+EXPOSE 3000
+
 WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
 
