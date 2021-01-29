@@ -35,7 +35,7 @@ jobs:
           path: ./tf/infra
       - terraform/apply:
           path: ./tf/infra
-          var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1}'
+          var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id=${SUBNET_ID}'
   build-image-and-push-to-ecr:
     machine:
       image: ubuntu-2004:202010-01
