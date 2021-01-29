@@ -63,7 +63,7 @@ workflows:
             - static-analysis
             - terraform-check-ecr-and-dns
       - aws-ecr/build-and-push-image:
-          repo: "${AWS_RESOURCE_NAME_PREFIX}"
+          repo: "${AWS_RESOURCE_NAME_PREFIX}-ecr"
           tag: "${CIRCLE_SHA1}"
           context: node-demo
           create-repo: false
