@@ -1,9 +1,21 @@
 orbs:
+  aws-ecr: circleci/aws-ecr@6.15.2
   node: circleci/node@4.0.0
 
 version: 2.1
+
+jobs:
+  app-tests:
+    lint:
+      steps:
+        run:
+          npm install eslint eslint-plugin-react #TODO add eslint config
+          node_modules/eslint/bin/eslint.js ./src/App.js
 
 workflows:
   app-tests:
     jobs:
       - node/test
+      - lint
+
+
