@@ -18,7 +18,7 @@ jobs:
         #TODO configure eslint
   terraform-linting:
     docker:
-      - image: cimg/base 
+      - image: cimg/base:2021.01 
     steps:
       - checkout
       - terraform/install:  
@@ -33,7 +33,7 @@ jobs:
           path: ./terraform/route53
   terraform-deploy-ecr:
     docker:
-      - image: cimg/base 
+      - image: cimg/base:2021.01 
     steps:
       - checkout
       - terraform/install:  
