@@ -171,7 +171,7 @@ resource "aws_launch_configuration" "nodedemo" {
   security_groups             = [aws_security_group.nodedemo_asg.id]
   associate_public_ip_address = "true"
   key_name                    = var.ecs_key_pair_name
-  user_data = <<EOF
+  user_data                   = <<EOF
                                   #!/bin/bash
                                   echo ECS_CLUSTER=${var.aws_resource_name_prefix}-cluster >> /etc/ecs/ecs.config
                                   EOF
