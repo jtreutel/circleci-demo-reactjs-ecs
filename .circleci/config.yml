@@ -24,14 +24,14 @@ jobs:
       - terraform/install:  
           terraform_version: 0.14.5
       - terraform/fmt:  
-          path: ./tf/ecr
+          path: ./tf/infra
       - terraform/validate:  
-          path: ./tf/ecr
+          path: ./tf/infra
       - terraform/fmt:  
           path: ./tf/route53
       - terraform/validate:  
           path: ./tf/route53
-  terraform-check-ecr-and-dns:
+  terraform-infra-check:
     docker:
       - image: cimg/base:2021.01 
     steps:
@@ -39,10 +39,22 @@ jobs:
       - terraform/install:  
           terraform_version: 0.14.5
       - terraform/init:
-          path: ./tf/ecr
+          path: ./tf/infra
       - terraform/apply:
-          path: ./tf/ecr
+          path: ./tf/infra
           var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX}'
+  build-image-and-push-to-ecr:
+    machine:
+      image: ubuntu-2004:202010-01 # recommended linux image
+    resource_class: large
+    steps:
+      - checkout
+      - aws-ecr/build-and-push-image:
+          repo: "${AWS_RESOURCE_NAME_PREFIX}-ecr"
+          tag: "${CIRCLE_SHA1}"
+          create-repo: false
+
+
 
 workflows:
   version: 2
@@ -62,17 +74,14 @@ workflows:
             - node/test
             - static-analysis
             - terraform-check-ecr-and-dns
-      - aws-ecr/build-and-push-image:
-          repo: "${AWS_RESOURCE_NAME_PREFIX}-ecr"
-          tag: "${CIRCLE_SHA1}"
+      - build-image-and-push-to-ecr:
           context: node-demo
-          create-repo: false
           requires:
             - manual-approval
       - aws-ecs/deploy-service-update:
           context: node-demo
           requires:
-            - aws-ecr/build-and-push-image 
+            - build-image-and-push-to-ecr
           family: "${AWS_RESOURCE_NAME_PREFIX}-service"
           cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
           container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_SHA1}"
