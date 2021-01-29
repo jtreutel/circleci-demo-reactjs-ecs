@@ -5,6 +5,7 @@
     "memory": 200,
     "cpu": 10,
     "essential": true,
+    "networkMode": "awsvpc",
     "portMappings": [
       {
         "hostPort": 3000,
