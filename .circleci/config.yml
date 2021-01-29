@@ -16,7 +16,7 @@ jobs:
           npm install eslint eslint-plugin-react 
           node_modules/eslint/bin/eslint.js ./src/
         #TODO configure eslint
-  terraform-linting:
+  terraform-lint-and-infra-check:
     docker:
       - image: cimg/base:2021.01 
     steps:
@@ -31,13 +31,6 @@ jobs:
           path: ./tf/route53
       - terraform/validate:  
           path: ./tf/route53
-  terraform-infra-check:
-    docker:
-      - image: cimg/base:2021.01 
-    steps:
-      - checkout
-      - terraform/install:  
-          terraform_version: 0.14.5
       - terraform/init:
           path: ./tf/infra
       - terraform/apply:
@@ -60,20 +53,16 @@ workflows:
   version: 2
   test-and-deploy:
     jobs:
-      - terraform-linting:
+      - terraform-lint-and-infra-check:
           context: node-demo
       - node/test
       - static-analysis
-      - terraform-infra-check:
-          context: node-demo
-          requires:
-            - terraform-linting
       - manual-approval:
           type: approval
           requires:
             - node/test
             - static-analysis
-            - terraform-infra-check
+            - terraform-lint-and-infra-check
       - build-image-and-push-to-ecr:
           context: node-demo
           requires:
