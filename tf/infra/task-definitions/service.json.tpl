@@ -1,7 +1,7 @@
 [
   {
-    "name": "${image_name}-service",
-    "image": "${aws_acct_no}.dkr.ecr.${aws_region}.amazonaws.com/${image_name}:${image_tag}",
+    "name": "${aws_resource_name_prefix}-service",
+    "image": "${aws_acct_no}.dkr.ecr.${aws_region}.amazonaws.com/${aws_resource_name_prefix}-ecr:${image_tag}",
     "memory": 500,
     "cpu": 256,
     "essential": true,
