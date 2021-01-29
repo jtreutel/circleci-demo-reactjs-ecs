@@ -16,10 +16,10 @@ resource "aws_ecs_task_definition" "nodedemo" {
   container_definitions = templatefile(
     "${path.module}/task-definitions/service.json.tpl",
     {
-      image_name  = "${var.aws_resource_name_prefix}",
-      image_tag   = "${var.commit_hash}",
-      aws_acct_no = "${data.aws_caller_identity.current.id}",
-      aws_region  = "${data.aws_region.current.name}"
+      image_name  = var.aws_resource_name_prefix,
+      image_tag   = var.commit_hash,
+      aws_acct_no = data.aws_caller_identity.current.id,
+      aws_region  = data.aws_region.current.name
     }
   )
 }
@@ -45,6 +45,7 @@ resource "aws_ecs_service" "nodedemo" {
     container_port   = 3000
   }
 
+  depends_on = [aws_lb.nodedemo, aws_alb_listener.nodedemo, aws_lb_target_group.nodedemo]
 }
 
 
