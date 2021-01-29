@@ -5,10 +5,12 @@ orbs:
 version: 2.1
 
 jobs:
-  app-tests:
-    lint:
-      steps:
-        run:
+  lint:
+    docker:
+      - image: cimg/node:15.7.0
+    steps:
+      - checkout
+      - run: |
           npm install eslint eslint-plugin-react #TODO add eslint config
           node_modules/eslint/bin/eslint.js ./src/App.js
 
