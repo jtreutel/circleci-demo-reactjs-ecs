@@ -45,7 +45,7 @@ resource "aws_ecs_service" "nodedemo" {
     container_port   = 3000
   }
 
-  depends_on = [aws_lb.nodedemo, aws_alb_listener.nodedemo, aws_lb_target_group.nodedemo]
+  depends_on = [aws_lb.nodedemo, aws_lb_listener.nodedemo, aws_lb_target_group.nodedemo]
 }
 
 
