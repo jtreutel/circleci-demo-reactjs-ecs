@@ -1,24 +1,79 @@
 orbs:
+  aws-ecs: circleci/aws-ecs@1.4.0
+  terraform: circleci/terraform@1.2.0
   aws-ecr: circleci/aws-ecr@6.15.2
   node: circleci/node@4.0.0
 
 version: 2.1
 
 jobs:
-  lint:
+  static-analysis:
     docker:
       - image: cimg/node:15.6.0
     steps:
       - checkout
       - run: |
-          npm install eslint eslint-plugin-react #TODO add eslint config
+          npm install eslint eslint-plugin-react 
           node_modules/eslint/bin/eslint.js ./src/App.js
+        #TODO configure eslint
+  terraform-linting:
+    docker:
+      - image: cimg/base 
+    steps:
+      - checkout
+      - terraform/install:  
+          terraform_version: 0.14.5
+      - terraform/fmt:  
+          path: ./terraform/ecr
+      - terraform/validate:  
+          path: ./terraform/ecr
+      - terraform/fmt:  
+          path: ./terraform/route53
+      - terraform/validate:  
+          path: ./terraform/route53
+  terraform-deploy-ecr:
+    docker:
+      - image: cimg/base 
+    steps:
+      - checkout
+      - terraform/install:  
+          terraform_version: 0.14.5
+      - terraform/init:
+          path: ./terraform/ecr
+      - terraform/apply:
+          path: ./terraform/ecr
+          var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX}'
 
 workflows:
   version: 2
-  app-tests:
+  test-and-deploy:
     jobs:
       - node/test
-      - lint
+      - static-analysis
+      - terraform-linting:
+          context: node-demo
+      - manual-approval:
+          type: approval
+          requires:
+            - node/test
+            - static-analysis
+      - aws-ecr/build-and-push-image:
+          repo: "${AWS_RESOURCE_NAME_PREFIX}"
+          tag: "${CIRCLE_BUILD_NUM}-${CIRCLE_SHA1}"
+          context: node-demo
+          create-repo: false
+          requires:
+            - manual-approval
+      - terraform-deploy-ecr:
+          context: node-demo
+          requires:
+            - manual-approval
+      - aws-ecs/deploy-service-update:
+          requires:
+            - aws-ecr/build-and-push-image 
+          family: "${AWS_RESOURCE_NAME_PREFIX}-service"
+          cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
+          container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_BUILD_NUM}-${CIRCLE_SHA1}"
+
 
 
