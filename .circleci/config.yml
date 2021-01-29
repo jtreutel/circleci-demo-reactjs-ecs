@@ -70,6 +70,7 @@ workflows:
           requires:
             - manual-approval
       - aws-ecs/deploy-service-update:
+          context: node-demo
           requires:
             - aws-ecr/build-and-push-image 
           family: "${AWS_RESOURCE_NAME_PREFIX}-service"
