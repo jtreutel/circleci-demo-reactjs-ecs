@@ -24,13 +24,13 @@ jobs:
       #- terraform/install:  
       #    terraform_version: 0.14.5
       - terraform/fmt:  
-          path: ./terraform/ecr
+          path: ./tf/ecr
       - terraform/validate:  
-          path: ./terraform/ecr
+          path: ./tf/ecr
       - terraform/fmt:  
-          path: ./terraform/route53
+          path: ./tf/route53
       - terraform/validate:  
-          path: ./terraform/route53
+          path: ./tf/route53
   terraform-deploy-ecr:
     docker:
       - image: cimg/base:2021.01 
@@ -39,9 +39,9 @@ jobs:
       #- terraform/install:  
       #    terraform_version: 0.14.5
       - terraform/init:
-          path: ./terraform/ecr
+          path: ./tf/ecr
       - terraform/apply:
-          path: ./terraform/ecr
+          path: ./tf/ecr
           var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX}'
 
 workflows:
