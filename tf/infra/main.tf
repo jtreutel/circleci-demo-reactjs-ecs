@@ -140,7 +140,7 @@ resource "aws_security_group" "nodedemo_asg" {
     from_port       = 0
     to_port         = 0
     protocol        = "-1"
-    security_groups = aws_security_group.nodedemo_lb.id
+    security_groups = aws_security_group.nodedemo_alb.id
   }
 
   egress {
