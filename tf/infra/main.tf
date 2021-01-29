@@ -154,7 +154,7 @@ resource "aws_security_group" "nodedemo_asg" {
 
 resource "aws_launch_configuration" "nodedemo" {
   name                 = "${var.aws_resource_name_prefix}-lc"
-  image_id             = aws_ami.ecs_optimized.id
+  image_id             = data.aws_ami.ecs_optimized.id
   instance_type        = "t2.xlarge"
   iam_instance_profile = aws_iam_instance_profile.ecs-instance-profile.id
 
