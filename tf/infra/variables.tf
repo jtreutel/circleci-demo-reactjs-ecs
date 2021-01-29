@@ -17,3 +17,7 @@ variable "subnet_id_a" {
 variable "subnet_id_b" {
   type = string
 }
+
+variable "ecs_key_pair_name" {
+  type = string
+}
