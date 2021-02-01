@@ -37,7 +37,7 @@ resource "aws_ecs_service" "nodedemo" {
   cluster         = aws_ecs_cluster.nodedemo.id
   task_definition = aws_ecs_task_definition.nodedemo.arn
   desired_count   = 2
-
+  network_configuration = "awsvpc"
 
   load_balancer {
     target_group_arn = aws_lb_target_group.nodedemo.arn
