@@ -7,7 +7,7 @@ orbs:
 version: 2.1
 
 jobs:
-  static-analysis:
+  node-static-analysis:
     docker:
       - image: cimg/node:15.6.0
     steps:
@@ -68,12 +68,12 @@ workflows:
       - terraform-lint-and-infra-check:
           context: node-demo
       - node/test
-      - static-analysis
+      - node-static-analysis
       - manual-approval:
           type: approval
           requires:
             - node/test
-            - static-analysis
+            - node-static-analysis
             - terraform-lint-and-infra-check
       - build-image-and-push-to-ecr:
           context: node-demo
