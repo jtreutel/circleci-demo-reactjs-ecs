@@ -95,6 +95,7 @@ resource "aws_lb_target_group" "nodedemo" {
   name     = "${var.aws_resource_name_prefix}-lb-tg"
   port     = 3000
   protocol = "HTTP"
+  target_type = "ip"
   vpc_id   = var.vpc_id
 }
 
