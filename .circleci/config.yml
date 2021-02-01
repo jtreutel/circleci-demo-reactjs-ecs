@@ -27,24 +27,18 @@ jobs:
           path: ./tf/infra
       - terraform/fmt:  
           path: ./tf/route53
-  terraform-lint-and-infra-check:
+  terraform-validate-and-plan:
     docker:
       - image: cimg/base:2021.01 
     steps:
       - checkout
       - terraform/install:  
           terraform_version: 0.14.5
-      - terraform/fmt:  
-          path: ./tf/infra
       - terraform/validate:  
           path: ./tf/infra
-      - terraform/fmt:  
-          path: ./tf/route53
       - terraform/validate:  
           path: ./tf/route53
-      - terraform/init:
-          path: ./tf/infra
-      - terraform/apply:
+      - terraform/plan:
           path: ./tf/infra
           var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id_a=${SUBNET_ID_A},subnet_id_b=${SUBNET_ID_B},ecs_key_pair_name=${ECS_KEY_PAIR_NAME}'
   build-image-and-push-to-ecr:
@@ -57,6 +51,18 @@ jobs:
           repo: "${AWS_RESOURCE_NAME_PREFIX}-ecr"
           tag: "${CIRCLE_SHA1}"
           create-repo: false
+  terraform-apply:
+    docker:
+      - image: cimg/base:2021.01 
+    steps:
+      - checkout
+      - terraform/install:  
+          terraform_version: 0.14.5
+      - terraform/init:
+          path: ./tf/infra
+      - terraform/apply:
+          path: ./tf/infra
+          var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id_a=${SUBNET_ID_A},subnet_id_b=${SUBNET_ID_B},ecs_key_pair_name=${ECS_KEY_PAIR_NAME}'
 
 
 
@@ -65,7 +71,7 @@ workflows:
   test-and-deploy:
     jobs:
       - terraform-format-check
-      - terraform-lint-and-infra-check:
+      - terraform-validate-and-plan:
           context: node-demo
       - node/test
       - node-static-analysis
@@ -74,8 +80,12 @@ workflows:
           requires:
             - node/test
             - node-static-analysis
-            - terraform-lint-and-infra-check
+            - terraform-validate-and-plan
       - build-image-and-push-to-ecr:
+          context: node-demo
+          requires:
+            - manual-approval
+      - terraform-apply:
           context: node-demo
           requires:
             - manual-approval
@@ -83,6 +93,7 @@ workflows:
           context: node-demo
           requires:
             - build-image-and-push-to-ecr
+            - terraform-apply
           family: "${AWS_RESOURCE_NAME_PREFIX}-service"
           cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
           container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_SHA1}"
