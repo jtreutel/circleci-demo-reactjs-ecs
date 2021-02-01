@@ -74,6 +74,15 @@ workflows:
           family: "${AWS_RESOURCE_NAME_PREFIX}-service"
           cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
           container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_SHA1}"
-
-
+  daily-job: #runs at 05:45 UTC / 14:45 JST
+    triggers:
+      - schedule:
+          cron: "${CRON_EXPRESSION}"
+          filters:
+            branches:
+              only:
+                - crontest
+    jobs:
+      - terraform-lint-and-infra-check:
+          context: node-demo
 
