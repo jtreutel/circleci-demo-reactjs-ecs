@@ -33,10 +33,10 @@ resource "aws_ecs_cluster" "nodedemo" {
 
 
 resource "aws_ecs_service" "nodedemo" {
-  name            = "${var.aws_resource_name_prefix}-service"
-  cluster         = aws_ecs_cluster.nodedemo.id
-  task_definition = aws_ecs_task_definition.nodedemo.arn
-  desired_count   = 2
+  name                  = "${var.aws_resource_name_prefix}-service"
+  cluster               = aws_ecs_cluster.nodedemo.id
+  task_definition       = aws_ecs_task_definition.nodedemo.arn
+  desired_count         = 2
   network_configuration = "awsvpc"
 
   load_balancer {
