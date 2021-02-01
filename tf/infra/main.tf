@@ -33,11 +33,16 @@ resource "aws_ecs_cluster" "nodedemo" {
 
 
 resource "aws_ecs_service" "nodedemo" {
-  name                  = "${var.aws_resource_name_prefix}-service"
-  cluster               = aws_ecs_cluster.nodedemo.id
-  task_definition       = aws_ecs_task_definition.nodedemo.arn
-  desired_count         = 2
-  network_configuration = "awsvpc"
+  name            = "${var.aws_resource_name_prefix}-service"
+  cluster         = aws_ecs_cluster.nodedemo.id
+  task_definition = aws_ecs_task_definition.nodedemo.arn
+  desired_count   = 2
+
+  network_configuration {
+    security_groups  = [aws_security_group.nodedemo_asg.id]
+    subnets          = [var.subnet_id_a, var.subnet_id_b]
+    assign_public_ip = false
+  }
 
   load_balancer {
     target_group_arn = aws_lb_target_group.nodedemo.arn
