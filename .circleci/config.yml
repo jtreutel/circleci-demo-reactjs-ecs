@@ -44,6 +44,7 @@ jobs:
   build-image-and-push-to-ecr:
     machine:
       image: ubuntu-2004:202010-01
+      docker_layer_caching: true
     resource_class: large
     steps:
       - checkout
