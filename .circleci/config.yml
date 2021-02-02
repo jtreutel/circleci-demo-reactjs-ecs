@@ -51,6 +51,7 @@ jobs:
           repo: "${AWS_RESOURCE_NAME_PREFIX}-ecr"
           tag: "${CIRCLE_SHA1}"
           create-repo: false
+          extra-build-args: "-m 8G --cpus 3" 
   terraform-apply:
     docker:
       - image: cimg/base:2021.01 
