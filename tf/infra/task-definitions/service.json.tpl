@@ -6,6 +6,7 @@
     "cpu": 256,
     "essential": true,
     "networkMode": "awsvpc",
+    "interactive": true,
     "portMappings": [
       {
         "hostPort": 3000,
