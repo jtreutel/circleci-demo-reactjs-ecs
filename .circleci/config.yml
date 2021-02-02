@@ -44,6 +44,7 @@ jobs:
   build-image-and-push-to-ecr:
     machine:
       image: ubuntu-2004:202010-01
+      docker_layer_caching: true
     resource_class: large
     steps:
       - checkout
@@ -76,16 +77,16 @@ workflows:
           context: node-demo
       - node/test
       - node-static-analysis
-      - manual-approval:
-          type: approval
+      - build-image-and-push-to-ecr:
+          context: node-demo
           requires:
             - node/test
             - node-static-analysis
             - terraform-validate-and-plan
-      - build-image-and-push-to-ecr:
-          context: node-demo
+      - manual-approval:
+          type: approval
           requires:
-            - manual-approval
+            - build-image-and-push-to-ecr
       - terraform-apply:
           context: node-demo
           requires:
@@ -93,7 +94,6 @@ workflows:
       - aws-ecs/deploy-service-update:
           context: node-demo
           requires:
-            - build-image-and-push-to-ecr
             - terraform-apply
           family: "${AWS_RESOURCE_NAME_PREFIX}-service"
           cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
