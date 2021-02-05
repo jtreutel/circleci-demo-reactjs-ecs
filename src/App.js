@@ -4,7 +4,7 @@ import './App.css';
 import Layout from './Componets/Layout';
 import Header from './Componets/Header';
 import Container from './Componets/Container';
-import Card from './Componets/Card';;
+import Card from './Componets/Card';
 
 
 class App extends Component {
