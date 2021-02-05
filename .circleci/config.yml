@@ -96,6 +96,11 @@ workflows:
       - node/test:
           requires:
             - checkout-code
+          post-steps:
+            - save_cache:
+                key: v1-node-deps
+                paths:
+                  - ./node_modules
       - node-static-analysis:
           requires:
             - checkout-code
@@ -109,6 +114,9 @@ workflows:
           context: node-demo
           requires:
             - manual-approval
+          pre-steps:
+            - restore_cache:
+                key: v1-node-deps
       - terraform-apply:
           context: node-demo
           requires:
