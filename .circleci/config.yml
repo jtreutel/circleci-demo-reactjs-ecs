@@ -7,11 +7,18 @@ orbs:
 version: 2.1
 
 jobs:
+  checkout-code:
+    - checkout
+    - persist_to_workspace:
+        root: .
+        paths:
+          - .
   node-static-analysis:
     docker:
       - image: cimg/node:15.6.0
     steps:
-      - checkout
+      - attach_workspace:
+          at: .
       - run: |
           npm install eslint eslint-plugin-react 
           node_modules/eslint/bin/eslint.js ./src/
@@ -20,7 +27,8 @@ jobs:
     docker:
       - image: cimg/base:2021.01 
     steps:
-      - checkout
+      - attach_workspace:
+          at: .
       - terraform/install:  
           terraform_version: 0.14.5
       - terraform/fmt:  
@@ -31,7 +39,8 @@ jobs:
     docker:
       - image: cimg/base:2021.01 
     steps:
-      - checkout
+      - attach_workspace:
+          at: .
       - terraform/install:  
           terraform_version: 0.14.5
       - terraform/validate:  
@@ -46,7 +55,8 @@ jobs:
       image: ubuntu-2004:202010-01
     resource_class: large
     steps:
-      - checkout
+      - attach_workspace:
+          at: .
       - aws-ecr/build-and-push-image:
           repo: "${AWS_RESOURCE_NAME_PREFIX}-ecr"
           tag: "${CIRCLE_SHA1}"
@@ -56,7 +66,8 @@ jobs:
     docker:
       - image: cimg/base:2021.01 
     steps:
-      - checkout
+      - attach_workspace:
+          at: .
       - terraform/install:  
           terraform_version: 0.14.5
       - terraform/init:
@@ -71,11 +82,20 @@ workflows:
   version: 2
   test-and-deploy:
     jobs:
+      - checkout-code
       - terraform-format-check
+          requires:
+            - checkout-code
       - terraform-validate-and-plan:
           context: node-demo
+          requires:
+            - checkout-code
       - node/test
+          requires:
+            - checkout-code
       - node-static-analysis
+          requires:
+            - checkout-code
       - manual-approval:
           type: approval
           requires:
