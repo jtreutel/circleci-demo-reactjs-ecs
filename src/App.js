@@ -11,11 +11,7 @@ class App extends Component {
   render() {
     return (
       <Layout>
-<<<<<<< HEAD
         <Header title="Red Panda Gram"/>
-=======
-        <Header title="The Red Panda Corner"/>
->>>>>>> demo
         <Container>
           <Card cards={ this.state.cards } />
         </Container>
