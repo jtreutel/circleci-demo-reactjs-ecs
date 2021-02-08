@@ -7,5 +7,5 @@ resource "aws_route53_record" "www" {
   name    = "node-demo.${data.aws_route53_zone.nodedemo.name}"
   type    = "CNAME"
   ttl     = "30"
-  records = [data.terraform_remote_state.outputs.alb_public_dns]
+  records = [data.terraform_remote_state.infra.outputs.alb_public_dns]
 }
