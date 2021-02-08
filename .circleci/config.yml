@@ -66,7 +66,7 @@ jobs:
           tag: "${CIRCLE_SHA1}"
           create-repo: false
           extra-build-args: "-m=8G --cpuset-cpus 0-2" 
-  terraform-apply:
+  terraform-apply-infra:
     docker:
       - image: cimg/base:2021.01 
     steps:
@@ -79,6 +79,19 @@ jobs:
       - terraform/apply:
           path: ./tf/infra
           var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id_a=${SUBNET_ID_A},subnet_id_b=${SUBNET_ID_B},ecs_key_pair_name=${ECS_KEY_PAIR_NAME}'
+  terraform-apply-dns:
+    docker:
+      - image: cimg/base:2021.01 
+    steps:
+      - attach_workspace:
+          at: .
+      - terraform/install:  
+          terraform_version: 0.14.5
+      - terraform/init:
+          path: ./tf/route53
+      - terraform/apply:
+          path: ./tf/route53
+          var: 'dns_domain=${DNS_DOMAIN}'
 
 
 
@@ -115,17 +128,18 @@ workflows:
           type: approval
           requires:
             - build-image-and-push-to-ecr
-      - terraform-apply:
+      - terraform-apply-infra:
           context: node-demo
           requires:
             - manual-approval
       - aws-ecs/deploy-service-update:
           context: node-demo
           requires:
-            - terraform-apply
+            - terraform-apply-infra
           family: "${AWS_RESOURCE_NAME_PREFIX}-service"
           cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
           container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_SHA1}"
-
-
-
+      - terraform-apply-dns:
+          context: node-demo
+          requires:
+            - aws-ecs/deploy-service-update
