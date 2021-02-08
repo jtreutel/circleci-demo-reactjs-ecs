@@ -127,7 +127,14 @@ workflows:
       - manual-approval:
           type: approval
           requires:
+<<<<<<< HEAD
             - build-image-and-push-to-ecr
+=======
+            - manual-approval
+          pre-steps:
+            - restore_cache:
+                key: v1-node-deps
+>>>>>>> demo
       - terraform-apply-infra:
           context: node-demo
           requires:
@@ -135,6 +142,10 @@ workflows:
       - aws-ecs/deploy-service-update:
           context: node-demo
           requires:
+<<<<<<< HEAD
+=======
+            - build-image-and-push-to-ecr
+>>>>>>> demo
             - terraform-apply-infra
           family: "${AWS_RESOURCE_NAME_PREFIX}-service"
           cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
