@@ -114,6 +114,9 @@ workflows:
                 key: v1-node-deps
                 paths:
                   - ./node_modules
+            - store_test_results:
+                path:
+                  - ./test-results/junit.xml
       - node-static-analysis:
           requires:
             - checkout-code
