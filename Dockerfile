@@ -7,7 +7,7 @@ WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
 
 # start app
-ENTRYPOINT npm start
+CMD npm start
 
 # install app dependencies
 COPY package.json ./
