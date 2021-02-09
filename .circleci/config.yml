@@ -115,8 +115,7 @@ workflows:
                 paths:
                   - ./node_modules
             - store_test_results:
-                path:
-                  - ./test-results/junit.xml
+                path: ./test-results/junit.xml
       - node-static-analysis:
           requires:
             - checkout-code
