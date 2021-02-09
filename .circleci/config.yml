@@ -120,6 +120,9 @@ workflows:
             - checkout-code
       - build-image-and-push-to-ecr:
           context: node-demo
+          pre-steps:
+            - restore_cache:
+                key: v1-node-deps
           requires:
             - node/test
             - node-static-analysis
