@@ -11,7 +11,7 @@ class App extends Component {
   render() {
     return (
       <Layout>
-        <Header title="Top Red Panda Pics"/>
+        <Header title="Top Aquarium Pics"/>
         <Container>
           <Card cards={ this.state.cards } />
         </Container>
@@ -24,7 +24,7 @@ class App extends Component {
   };
 
   componentDidMount() {
-      fetch('https://www.reddit.com/r/redpandas/top.json?t=all&count=20')
+      fetch('https://www.reddit.com/r/fishpics/top.json?t=all&count=20')
       .then(res => res.json())
       .then((data) => {
           console.log(data.data.children);
@@ -34,4 +34,4 @@ class App extends Component {
   }
 }
 
-export default App;
+//export default App;
