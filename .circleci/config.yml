@@ -149,3 +149,12 @@ workflows:
           context: node-demo
           requires:
             - aws-ecs/deploy-service-update
+  nightly_security_scan:
+    jobs:
+      - build-image-and-push-to-ecr
+    triggers:
+      - schedule:
+          cron: "0 0 * * 1,2,3,4,5" #run at 00:00 M-F
+          filters:
+            branches: 
+              only: master
