@@ -91,6 +91,18 @@ jobs:
       - terraform/apply:
           path: ./tf/route53
           var: 'dns_domain=${DNS_DOMAIN}'
+  build-image-only:
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: true
+    resource_class: large
+    steps:
+      - attach_workspace:
+          at: .
+      - aws-ecr/build-image:
+          repo: "${AWS_RESOURCE_NAME_PREFIX}-ecr"
+          tag: "${CIRCLE_SHA1}"
+          skip-when-tags-exist: false
 
 
 
@@ -149,9 +161,9 @@ workflows:
           context: node-demo
           requires:
             - aws-ecs/deploy-service-update
-  nightly_security_scan:
+  nightly_build:
     jobs:
-      - build-image-and-push-to-ecr
+      - build-image-only
     triggers:
       - schedule:
           cron: "0 0 * * 1,2,3,4,5" #run at 00:00 M-F
