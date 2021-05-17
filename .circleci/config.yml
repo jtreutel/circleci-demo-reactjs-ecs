@@ -25,24 +25,7 @@ jobs:
           root: .
           paths:
             - .
-      #- *notify_slack_on_fail
-      - slack/notify:
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "plain_text",
-                      "text": "*This is a text notification from the checkout-code step!*",
-                      "emoji": true
-                    }
-                  ]
-                }
-              ]
-            }
-          event: always
+      - *notify_slack_on_fail
   node-static-analysis:
     docker:
       - image: cimg/node:15.6.0
@@ -166,6 +149,7 @@ workflows:
                 path: ./test-results
             - store_artifacts:
                 path: ./test-results/junit.xml
+            - *notify_slack_on_fail
       - node-static-analysis:
           context: node-demo
           requires:
@@ -194,13 +178,18 @@ workflows:
           family: "${AWS_RESOURCE_NAME_PREFIX}-service"
           cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
           container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_SHA1}"
+          post-steps:
+            - *notify_slack_on_fail
       - terraform-apply-dns:
           context: node-demo
           requires:
             - aws-ecs/deploy-service-update
   nightly_build:
     jobs:
-      - build-image-only
+      - build-image-only:
+          context: node-demo
+          post-steps:
+            - *notify_slack_on_fail
     triggers:
       - schedule:
           cron: "0 0 * * 1,2,3,4,5" #run at 00:00 M-F
