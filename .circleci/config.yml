@@ -25,7 +25,24 @@ jobs:
           root: .
           paths:
             - .
-      - *notify_slack_on_fail
+      #- *notify_slack_on_fail
+      - slack/notify:
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "plain_text",
+                      "text": "*This is a text notification from the checkout-code step!*",
+                      "emoji": true
+                    }
+                  ]
+                }
+              ]
+            }
+          event: always
   node-static-analysis:
     docker:
       - image: cimg/node:15.6.0
