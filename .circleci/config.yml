@@ -1,5 +1,7 @@
+#This configures the CircleCI config.yml version.  Currently, 2.1 is the latest version.zs
 version: 2.1
 
+#Orbs are reusable packages of pipeline configuration maintained by CircleCI, our partners, or our community.
 orbs:
   node: circleci/node@4.0.0
   aws-ecs: circleci/aws-ecs@1.4.0
@@ -7,14 +9,20 @@ orbs:
   terraform: circleci/terraform@1.2.0
   slack: circleci/slack@4.4.2
 
-
+#These are YAML anchors.  They allow use to reuse the same bits of YAML in our pipeline config, keeping it dry.
 notify_slack_on_fail: &notify_slack_on_fail
   slack/notify:
     channel: jennings-demos
     event: fail
     template: basic_fail_1
+notify_slack_on_success: &notify_slack_on_success
+  slack/notify:
+    channel: jennings-demos
+    event: pass
+    template: basic_success_1
 
 
+#This is an unordered list of jobs that CircleCI will run in this pipeline.
 jobs:
   checkout-code:
     docker:
@@ -121,10 +129,10 @@ jobs:
       - *notify_slack_on_fail
 
 
-
+#Workflows specify the logic according to which the jobs should be run.
 workflows:
   version: 2
-  test-and-deploy:
+  test-and-deploy:                      #This workflow will run on each commit.
     jobs:
       - checkout-code:
           context: node-demo
@@ -184,12 +192,14 @@ workflows:
           context: node-demo
           requires:
             - aws-ecs/deploy-service-update
-  nightly_build:
+            
+  nightly_build:                                #This workflow will run according to a cron-based schedule.
     jobs:
       - build-image-only:
           context: node-demo
           post-steps:
             - *notify_slack_on_fail
+            - *notify_slack_on_success
     triggers:
       - schedule:
           cron: "0 0 * * 1,2,3,4,5" #run at 00:00 M-F
