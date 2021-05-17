@@ -1,10 +1,19 @@
-orbs:
-  aws-ecs: circleci/aws-ecs@1.4.0
-  terraform: circleci/terraform@1.2.0
-  aws-ecr: circleci/aws-ecr@6.15.2
-  node: circleci/node@4.0.0
-
 version: 2.1
+
+orbs:
+  node: circleci/node@4.0.0
+  aws-ecs: circleci/aws-ecs@1.4.0
+  aws-ecr: circleci/aws-ecr@6.15.2
+  terraform: circleci/terraform@1.2.0
+  slack: circleci/slack@4.4.2
+
+
+notify_slack_on_fail: &notify_slack_on_fail
+  slack/notify:
+    channel: jennings-demos
+    event: fail
+    template: basic_fail_1
+
 
 jobs:
   checkout-code:
@@ -16,6 +25,7 @@ jobs:
           root: .
           paths:
             - .
+      - *notify_slack_on_fail
   node-static-analysis:
     docker:
       - image: cimg/node:15.6.0
@@ -25,6 +35,7 @@ jobs:
       - run: |
           npm install eslint eslint-plugin-react 
           node_modules/eslint/bin/eslint.js ./src/
+      - *notify_slack_on_fail
   terraform-format-check:
     docker:
       - image: cimg/base:2021.01 
@@ -37,6 +48,7 @@ jobs:
           path: ./tf/infra
       - terraform/fmt:  
           path: ./tf/route53
+      - *notify_slack_on_fail
   terraform-validate-and-plan:
     docker:
       - image: cimg/base:2021.01 
@@ -52,6 +64,7 @@ jobs:
       - terraform/plan:
           path: ./tf/infra
           var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id_a=${SUBNET_ID_A},subnet_id_b=${SUBNET_ID_B},ecs_key_pair_name=${ECS_KEY_PAIR_NAME}'
+      - *notify_slack_on_fail
   build-image-and-push-to-ecr:
     machine:
       image: ubuntu-2004:202010-01
@@ -64,6 +77,7 @@ jobs:
           repo: "${AWS_RESOURCE_NAME_PREFIX}-ecr"
           tag: "${CIRCLE_SHA1}"
           create-repo: false
+      - *notify_slack_on_fail
   terraform-apply-infra:
     docker:
       - image: cimg/base:2021.01 
@@ -77,6 +91,7 @@ jobs:
       - terraform/apply:
           path: ./tf/infra
           var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id_a=${SUBNET_ID_A},subnet_id_b=${SUBNET_ID_B},ecs_key_pair_name=${ECS_KEY_PAIR_NAME}'
+      - *notify_slack_on_fail
   terraform-apply-dns:
     docker:
       - image: cimg/base:2021.01 
@@ -90,6 +105,7 @@ jobs:
       - terraform/apply:
           path: ./tf/route53
           var: 'dns_domain=${DNS_DOMAIN}'
+      - *notify_slack_on_fail
   build-image-only:
     machine:
       image: ubuntu-2004:202010-01
@@ -102,6 +118,7 @@ jobs:
           repo: "${AWS_RESOURCE_NAME_PREFIX}-ecr"
           tag: "${CIRCLE_SHA1}"
           skip-when-tags-exist: false
+      - *notify_slack_on_fail
 
 
 
@@ -109,8 +126,10 @@ workflows:
   version: 2
   test-and-deploy:
     jobs:
-      - checkout-code
+      - checkout-code:
+          context: node-demo
       - terraform-format-check:
+          context: node-demo
           requires:
             - checkout-code
       - terraform-validate-and-plan:
@@ -118,6 +137,7 @@ workflows:
           requires:
             - checkout-code
       - node/test:
+          context: node-demo
           requires:
             - checkout-code
           post-steps:
@@ -130,6 +150,7 @@ workflows:
             - store_artifacts:
                 path: ./test-results/junit.xml
       - node-static-analysis:
+          context: node-demo
           requires:
             - checkout-code
       - build-image-and-push-to-ecr:
@@ -168,4 +189,6 @@ workflows:
           cron: "0 0 * * 1,2,3,4,5" #run at 00:00 M-F
           filters:
             branches: 
-              only: master
+              only: 
+                - demo
+                - master
