@@ -195,8 +195,12 @@ workflows:
             
   nightly_build:                                #This workflow will run according to a cron-based schedule.
     jobs:
+      - checkout-code:
+          context: node-demo
       - build-image-only:
           context: node-demo
+          requires:
+            - checkout-code
           post-steps:
             - *notify_slack_on_fail
             - *notify_slack_on_success
