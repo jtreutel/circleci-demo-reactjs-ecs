@@ -173,6 +173,9 @@ resource "aws_launch_configuration" "nodedemo" {
 
   lifecycle {
     create_before_destroy = true
+    ignore_changes = [
+      "image_id"
+    ]
   }
 
   security_groups             = [aws_security_group.nodedemo_asg.id]

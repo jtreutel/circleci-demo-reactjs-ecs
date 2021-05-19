@@ -1,37 +1,68 @@
-orbs:
-  aws-ecs: circleci/aws-ecs@1.4.0
-  terraform: circleci/terraform@1.2.0
-  aws-ecr: circleci/aws-ecr@6.15.2
-  node: circleci/node@4.0.0
-
+#This configures the CircleCI config.yml version.  Currently, 2.1 is the latest version.zs
 version: 2.1
 
+#Orbs are reusable packages of pipeline configuration maintained by CircleCI, our partners, or our community.
+orbs:
+  node: circleci/node@4.0.0
+  aws-ecs: circleci/aws-ecs@1.4.0
+  aws-ecr: circleci/aws-ecr@6.15.2
+  terraform: circleci/terraform@1.2.0
+  slack: circleci/slack@4.4.2
+
+#These are YAML anchors.  They allow use to reuse the same bits of YAML in our pipeline config, keeping it dry.
+notify_slack_on_fail: &notify_slack_on_fail
+  slack/notify:
+    channel: jennings-demos
+    event: fail
+    template: basic_fail_1
+notify_slack_on_success: &notify_slack_on_success
+  slack/notify:
+    channel: jennings-demos
+    event: pass
+    template: basic_success_1
+
+
+#This is an unordered list of jobs that CircleCI will run in this pipeline.
 jobs:
-  node-static-analysis:
-    docker:
-      - image: cimg/node:15.6.0
-    steps:
-      - checkout
-      - run: |
-          npm install eslint eslint-plugin-react 
-          node_modules/eslint/bin/eslint.js ./src/
-        #TODO configure eslint
-  terraform-format-check:
+  checkout-code:
     docker:
       - image: cimg/base:2021.01 
     steps:
       - checkout
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+      - *notify_slack_on_fail
+  node-static-analysis:
+    docker:
+      - image: cimg/node:15.6.0
+    steps:
+      - attach_workspace:
+          at: .
+      - run: |
+          npm install eslint eslint-plugin-react 
+          node_modules/eslint/bin/eslint.js ./src/
+      - *notify_slack_on_fail
+  terraform-format-check:
+    docker:
+      - image: cimg/base:2021.01 
+    steps:
+      - attach_workspace:
+          at: .
       - terraform/install:  
           terraform_version: 0.14.5
       - terraform/fmt:  
           path: ./tf/infra
       - terraform/fmt:  
           path: ./tf/route53
+      - *notify_slack_on_fail
   terraform-validate-and-plan:
     docker:
       - image: cimg/base:2021.01 
     steps:
-      - checkout
+      - attach_workspace:
+          at: .
       - terraform/install:  
           terraform_version: 0.14.5
       - terraform/validate:  
@@ -41,23 +72,26 @@ jobs:
       - terraform/plan:
           path: ./tf/infra
           var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id_a=${SUBNET_ID_A},subnet_id_b=${SUBNET_ID_B},ecs_key_pair_name=${ECS_KEY_PAIR_NAME}'
+      - *notify_slack_on_fail
   build-image-and-push-to-ecr:
     machine:
       image: ubuntu-2004:202010-01
       docker_layer_caching: true
     resource_class: large
     steps:
-      - checkout
+      - attach_workspace:
+          at: .
       - aws-ecr/build-and-push-image:
           repo: "${AWS_RESOURCE_NAME_PREFIX}-ecr"
           tag: "${CIRCLE_SHA1}"
           create-repo: false
-          extra-build-args: "-m=8G --cpuset-cpus 0-2" 
-  terraform-apply:
+      - *notify_slack_on_fail
+  terraform-apply-infra:
     docker:
       - image: cimg/base:2021.01 
     steps:
-      - checkout
+      - attach_workspace:
+          at: .
       - terraform/install:  
           terraform_version: 0.14.5
       - terraform/init:
@@ -65,20 +99,74 @@ jobs:
       - terraform/apply:
           path: ./tf/infra
           var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id_a=${SUBNET_ID_A},subnet_id_b=${SUBNET_ID_B},ecs_key_pair_name=${ECS_KEY_PAIR_NAME}'
+      - *notify_slack_on_fail
+  terraform-apply-dns:
+    docker:
+      - image: cimg/base:2021.01 
+    steps:
+      - attach_workspace:
+          at: .
+      - terraform/install:  
+          terraform_version: 0.14.5
+      - terraform/init:
+          path: ./tf/route53
+      - terraform/apply:
+          path: ./tf/route53
+          var: 'dns_domain=${DNS_DOMAIN}'
+      - *notify_slack_on_fail
+  build-image-only:
+    machine:
+      image: ubuntu-2004:202010-01
+      docker_layer_caching: true
+    resource_class: large
+    steps:
+      - attach_workspace:
+          at: .
+      - aws-ecr/build-image:
+          repo: "${AWS_RESOURCE_NAME_PREFIX}-ecr"
+          tag: "${CIRCLE_SHA1}"
+          skip-when-tags-exist: false
+      - *notify_slack_on_fail
 
 
-
+#Workflows specify the logic according to which the jobs should be run.
 workflows:
   version: 2
-  test-and-deploy:
+  test-and-deploy:                      #This workflow will run on each commit.
     jobs:
-      - terraform-format-check
+      - checkout-code:
+          context: node-demo
+      - terraform-format-check:
+          context: node-demo
+          requires:
+            - checkout-code
       - terraform-validate-and-plan:
           context: node-demo
-      - node/test
-      - node-static-analysis
+          requires:
+            - checkout-code
+      - node/test:
+          context: node-demo
+          requires:
+            - checkout-code
+          post-steps:
+            - save_cache:
+                key: v1-node-deps
+                paths:
+                  - ./node_modules
+            - store_test_results:
+                path: ./test-results
+            - store_artifacts:
+                path: ./test-results/junit.xml
+            - *notify_slack_on_fail
+      - node-static-analysis:
+          context: node-demo
+          requires:
+            - checkout-code
       - build-image-and-push-to-ecr:
           context: node-demo
+          pre-steps:
+            - restore_cache:
+                key: v1-node-deps
           requires:
             - node/test
             - node-static-analysis
@@ -87,17 +175,40 @@ workflows:
           type: approval
           requires:
             - build-image-and-push-to-ecr
-      - terraform-apply:
+      - terraform-apply-infra:
           context: node-demo
           requires:
             - manual-approval
       - aws-ecs/deploy-service-update:
           context: node-demo
           requires:
-            - terraform-apply
+            - terraform-apply-infra
           family: "${AWS_RESOURCE_NAME_PREFIX}-service"
           cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
           container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_SHA1}"
-
-
-
+          post-steps:
+            - *notify_slack_on_fail
+      - terraform-apply-dns:
+          context: node-demo
+          requires:
+            - aws-ecs/deploy-service-update
+            
+  nightly_build:                                #This workflow will run according to a cron-based schedule.
+    jobs:
+      - checkout-code:
+          context: node-demo
+      - build-image-only:
+          context: node-demo
+          requires:
+            - checkout-code
+          post-steps:
+            - *notify_slack_on_fail
+            - *notify_slack_on_success
+    triggers:
+      - schedule:
+          cron: "0 0 * * 1,2,3,4,5" #run at 00:00 M-F
+          filters:
+            branches: 
+              only: 
+                - demo
+                - master

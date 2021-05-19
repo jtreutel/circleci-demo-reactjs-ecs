@@ -1,11 +1,11 @@
 data "aws_route53_zone" "nodedemo" {
-  name = "jennings-circleci20.com"
+  name = var.dns_domain
 }
 
 resource "aws_route53_record" "www" {
   zone_id = data.aws_route53_zone.nodedemo.zone_id
-  name    = "nodedemo.${data.aws_route53_zone.nodedemo.name}"
-  type    = "A"
+  name    = "node-demo.${data.aws_route53_zone.nodedemo.name}"
+  type    = "CNAME"
   ttl     = "30"
-  records = ["10.0.0.1"]
+  records = [data.terraform_remote_state.infra.outputs.alb_public_dns]
 }
