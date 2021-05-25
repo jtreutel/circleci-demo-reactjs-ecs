@@ -36,3 +36,4 @@ DNS_DOMAIN	|`example.com` | The domain on which the DNS record pointing to the l
 SLACK_ACCESS_TOKEN | random string | [Slack docs](https://api.slack.com/authentication/basics) |
 SLACK_DEFAULT_CHANNEL	| random string | [Helpful Stackexchange thread](https://stackoverflow.com/questions/40940327/what-is-the-simplest-way-to-find-a-slack-team-id-and-a-channel-id) |
 
+ 
