@@ -9,6 +9,12 @@ orbs:
   terraform: circleci/terraform@1.2.0
   slack: circleci/slack@4.4.2
 
+# This is an execution environment that I want to reuse in multiple jobs in my config
+executors:
+  terraform:
+    docker:
+      - image: docker.mirror.hashicorp.services/hashicorp/terraform:0.14.5
+
 #These are YAML anchors.  They allow use to reuse the same bits of YAML in our pipeline config, keeping it dry.
 notify_slack_on_fail: &notify_slack_on_fail
   slack/notify:
@@ -20,6 +26,9 @@ notify_slack_on_success: &notify_slack_on_success
     channel: jennings-demos
     event: pass
     template: basic_success_1
+
+tfargs_infra: &tfargs_infra 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id_a=${SUBNET_ID_A},subnet_id_b=${SUBNET_ID_B},ecs_key_pair_name=${ECS_KEY_PAIR_NAME}'
+tfargs_dns: &tfargs_dns 'dns_domain=${DNS_DOMAIN}'
 
 
 #This is an unordered list of jobs that CircleCI will run in this pipeline.
@@ -44,34 +53,25 @@ jobs:
           npm install eslint eslint-plugin-react 
           node_modules/eslint/bin/eslint.js ./src/
       - *notify_slack_on_fail
-  terraform-format-check:
-    docker:
-      - image: cimg/base:2021.01 
+  terraform-fmt:
+    executor: terraform
+    parameters:
+      tfplan_path:
+        type: string
     steps:
       - attach_workspace:
           at: .
-      - terraform/install:  
-          terraform_version: 0.14.5
       - terraform/fmt:  
-          path: ./tf/infra
-      - terraform/fmt:  
-          path: ./tf/route53
+          path: << parameters.tfplan_path >>
       - *notify_slack_on_fail
-  terraform-validate-and-plan:
-    docker:
-      - image: cimg/base:2021.01 
+  terraform-plan-infra:
+    executor: terraform
     steps:
       - attach_workspace:
           at: .
-      - terraform/install:  
-          terraform_version: 0.14.5
-      - terraform/validate:  
-          path: ./tf/infra
-      - terraform/validate:  
-          path: ./tf/route53
       - terraform/plan:
           path: ./tf/infra
-          var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id_a=${SUBNET_ID_A},subnet_id_b=${SUBNET_ID_B},ecs_key_pair_name=${ECS_KEY_PAIR_NAME}'
+          var: *tfargs_infra
       - *notify_slack_on_fail
   build-image-and-push-to-ecr:
     machine:
@@ -87,32 +87,26 @@ jobs:
           create-repo: false
       - *notify_slack_on_fail
   terraform-apply-infra:
-    docker:
-      - image: cimg/base:2021.01 
+    executor: terraform
     steps:
       - attach_workspace:
           at: .
-      - terraform/install:  
-          terraform_version: 0.14.5
       - terraform/init:
           path: ./tf/infra
       - terraform/apply:
           path: ./tf/infra
-          var: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id_a=${SUBNET_ID_A},subnet_id_b=${SUBNET_ID_B},ecs_key_pair_name=${ECS_KEY_PAIR_NAME}'
+          var: *tfargs_infra
       - *notify_slack_on_fail
   terraform-apply-dns:
-    docker:
-      - image: cimg/base:2021.01 
+    executor: terraform
     steps:
       - attach_workspace:
           at: .
-      - terraform/install:  
-          terraform_version: 0.14.5
       - terraform/init:
           path: ./tf/route53
       - terraform/apply:
           path: ./tf/route53
-          var: 'dns_domain=${DNS_DOMAIN}'
+          var: *tfargs_dns
       - *notify_slack_on_fail
   build-image-only:
     machine:
@@ -136,11 +130,19 @@ workflows:
     jobs:
       - checkout-code:
           context: node-demo
-      - terraform-format-check:
+      - terraform-fmt: 
+          name: terraform-fmt-infra
+          tfplan_path: ./tf/infra
           context: node-demo
           requires:
-            - checkout-code
-      - terraform-validate-and-plan:
+            - checkout-code 
+      - terraform-fmt:
+          name: terraform-fmt-route53
+          tfplan_path: ./tf/route53
+          context: node-demo
+          requires:
+            - checkout-code 
+      - terraform-plan-infra:
           context: node-demo
           requires:
             - checkout-code
@@ -170,7 +172,7 @@ workflows:
           requires:
             - node/test
             - node-static-analysis
-            - terraform-validate-and-plan
+            - terraform-plan-infra
       - manual-approval:
           type: approval
           requires:
