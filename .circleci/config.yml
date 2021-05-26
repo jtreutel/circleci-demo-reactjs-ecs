@@ -27,8 +27,8 @@ notify_slack_on_success: &notify_slack_on_success
     event: pass
     template: basic_success_1
 
-tfargs_infra: 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id_a=${SUBNET_ID_A},subnet_id_b=${SUBNET_ID_B},ecs_key_pair_name=${ECS_KEY_PAIR_NAME}'
-tfargs_dns: 'dns_domain=${DNS_DOMAIN}'
+tfargs_infra: &tfargs_infra 'aws_resource_name_prefix=${AWS_RESOURCE_NAME_PREFIX},commit_hash=${CIRCLE_SHA1},vpc_id=${VPC_ID},subnet_id_a=${SUBNET_ID_A},subnet_id_b=${SUBNET_ID_B},ecs_key_pair_name=${ECS_KEY_PAIR_NAME}'
+tfargs_dns: &tfargs_dns 'dns_domain=${DNS_DOMAIN}'
 
 
 #This is an unordered list of jobs that CircleCI will run in this pipeline.
@@ -71,7 +71,7 @@ jobs:
           at: .
       - terraform/plan:
           path: ./tf/infra
-          var: &tfargs_infra
+          var: *tfargs_infra
       - *notify_slack_on_fail
   build-image-and-push-to-ecr:
     machine:
@@ -95,7 +95,7 @@ jobs:
           path: ./tf/infra
       - terraform/apply:
           path: ./tf/infra
-          var: &tfargs_infra
+          var: *tfargs_infra
       - *notify_slack_on_fail
   terraform-apply-dns:
     executor: terraform
@@ -106,7 +106,7 @@ jobs:
           path: ./tf/route53
       - terraform/apply:
           path: ./tf/route53
-          var: &tfargs_dns
+          var: *tfargs_dns
       - *notify_slack_on_fail
   build-image-only:
     machine:
