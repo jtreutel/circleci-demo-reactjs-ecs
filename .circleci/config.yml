@@ -172,8 +172,7 @@ workflows:
           requires:
             - node/test
             - node-static-analysis
-            - terraform-fmt-infra
-            - terraform-fmt-route53
+            - terraform-plan-infra
       - manual-approval:
           type: approval
           requires:
