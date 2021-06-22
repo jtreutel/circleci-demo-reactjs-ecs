@@ -35,7 +35,8 @@ tfargs_dns: &tfargs_dns 'dns_domain=${DNS_DOMAIN}'
 jobs:
   tforb-install-tf-test:
     #executor: terraform/default
-    executor: cimg/base:2021.01
+    docker: 
+      - image: cimg/base:2021.01
     steps:
       - terraform/install:
           terraform_version: 0.15.4
