@@ -6,7 +6,7 @@ orbs:
   node: circleci/node@4.0.0
   aws-ecs: circleci/aws-ecs@1.4.0
   aws-ecr: circleci/aws-ecr@6.15.2
-  terraform: circleci/terraform@1.2.0
+  terraform: circleci/terraform@2.1.0
   slack: circleci/slack@4.4.2
 
 # This is an execution environment that I want to reuse in multiple jobs in my config
