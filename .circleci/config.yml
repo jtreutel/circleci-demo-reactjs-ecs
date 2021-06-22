@@ -33,6 +33,11 @@ tfargs_dns: &tfargs_dns 'dns_domain=${DNS_DOMAIN}'
 
 #This is an unordered list of jobs that CircleCI will run in this pipeline.
 jobs:
+  tforb-install-tf-test:
+    executor: terraform/default
+    steps:
+      - terraform/install:
+          terraform_version: 0.15.4
   checkout-code:
     docker:
       - image: cimg/base:2021.01 
@@ -131,6 +136,7 @@ workflows:
     jobs:
       - checkout-code:
           context: node-demo
+      - tforb-install-tf-test
       - terraform-fmt: 
           name: terraform-fmt-infra
           tfplan_path: ./tf/infra
