@@ -93,6 +93,7 @@ jobs:
           at: .
       - terraform/init:
           path: ./tf/infra
+          backend_config_file: ./tf/infra/backend.conf
       - terraform/apply:
           path: ./tf/infra
           var: *tfargs_infra
