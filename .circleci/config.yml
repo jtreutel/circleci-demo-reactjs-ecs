@@ -34,7 +34,8 @@ tfargs_dns: &tfargs_dns 'dns_domain=${DNS_DOMAIN}'
 #This is an unordered list of jobs that CircleCI will run in this pipeline.
 jobs:
   tforb-install-tf-test:
-    executor: terraform/default
+    #executor: terraform/default
+    executor: cimg/base:2021.01
     steps:
       - terraform/install:
           terraform_version: 0.15.4
